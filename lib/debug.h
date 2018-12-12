@@ -33,7 +33,7 @@ extern "C" {
 #if defined(DEBUG)
 #define DEBUGLEVEL DEBUG
 #else
-#define DEBUGLEVEL 3
+#define DEBUGLEVEL 1
 #endif
 
 /* debug levels */
@@ -66,6 +66,7 @@ extern "C" {
 #define INFOR(...)
 #endif
 
+void dump_debug_log(char *name, void* buf, int len);
 
 #if defined(__cplusplus)
 

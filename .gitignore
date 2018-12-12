@@ -41,7 +41,7 @@
 *.su
 *.idb
 *.pdb
-
+*BAK
 # Kernel Module Compile Results
 *.mod*
 *.cmd
@@ -50,3 +50,4 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+spi_run

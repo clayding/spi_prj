@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <signal.h>
 #include <bcm2835.h>
 #include <wiringPi.h>
 #include "lib/debug.h"
@@ -15,7 +16,16 @@
 static unsigned char slave_isr_cnt[SPI_SLAVE_NUM/5?4:8] = {0};
 
 static unsigned char spi_init_done = 0;
+static void spi_end_handle(int param);
+static int exit_signal_register(void)
+{
+  if (signal(SIGINT, spi_end_handle) == SIG_ERR) {
+    perror("signal");
+    return 1;
+  }
 
+  return 0;
+}
 
 static int spi_init(void)
 {
@@ -55,17 +65,17 @@ static void gpio_ext_int_init(void)
   //TODO
 }
 
-int main(int argc, char **argv)
+int spi_run(int argc, char **argv)
 {
   static int8_t recv_from = -1;
   static uint8_t next_recv_sid = 0;
+
+  if(exit_signal_register()) return 1;
 
   if(spi_init() != 0)
     return 1;
   
   gpio_ext_int_init();
-
-  spi_init_data();
 
   while(1){
     slave_id_t sid = 0;
@@ -74,7 +84,9 @@ int main(int argc, char **argv)
     char  rx_buf[BUF_SIZE] = { 0x07, 0x08, 0x77, 0x88 }; // Data to receive
 
     sid = spi_tx_data_out((uint8_t*)tx_buf,sizeof(tx_buf));//sid: 1-4(8)
-
+    //if(sid)
+     //dump_debug_log("spi_tx",tx_buf,sizeof(tx_buf));
+#if 0
     if(sid && slave_isr_cnt[sid]){  //need to send and receive
       //TODO pull GPIO(sid) low 
       bcm2835_spi_transfernb(tx_buf, rx_buf, sizeof(tx_buf));
@@ -109,7 +121,11 @@ int main(int argc, char **argv)
         memset(rx_buf,0,sizeof(rx_buf));
       }
     }
-    usleep(1000000);
+#endif
+    memcpy(rx_buf, tx_buf,sizeof(tx_buf));
+    recv_from = sid;
+    spi_rx_data_in(recv_from,(uint8_t*)rx_buf,sizeof(rx_buf));
+    //usleep(1000000);
   }
  
   bcm2835_spi_end();
