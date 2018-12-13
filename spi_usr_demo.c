@@ -14,9 +14,10 @@ static volatile uint8_t spi_ready = 0;
 
 void demo_test_func(void *arg)
 {
+    //uint8_t k = 0;
     uint8_t tx_head = 0; //递增
     static slave_id_t sid = 1; //slave id :1-8
-    
+
     while(!spi_ready){}; //等待spi初始化完毕
 
     for(;;){
@@ -27,9 +28,33 @@ void demo_test_func(void *arg)
             tx_buf[i] =  rand();
         printf("\n");
         tx_buf[0] = tx_head++;
+        tx_buf[1] = tx_head+1;
+        tx_buf[126] = tx_buf[127]+tx_head -2 ;
+        tx_buf[127] = tx_buf[127]+tx_head;
         dump_debug_log("Tx",tx_buf,sizeof(tx_buf));
         usr_tx_data_in(sid,tx_buf,sizeof(tx_buf),PRIORIT_LOW);
 
+        sid = usr_rx_data_out(rx_buf,sizeof(rx_buf));
+        if(sid) //可能没有数据，使用sid判断
+            dump_debug_log("Rx",rx_buf,sizeof(rx_buf));
+        printf("\n");
+        sid = (sid%4)+1;
+    }
+
+
+/*  //顺序测试demo
+    for(;k < 5;k++){
+        //使用随机数作为测试发送buf的数据
+        int i = 0;
+        srand( (unsigned)time( NULL ));
+        for( ; i < sizeof(tx_buf);i++ )
+            tx_buf[i] =  rand();
+        printf("\n");
+        tx_buf[0] = tx_head++;
+        dump_debug_log("Tx",tx_buf,sizeof(tx_buf));
+        usr_tx_data_in(sid,tx_buf,sizeof(tx_buf),PRIORIT_LOW);
+    }
+    for(k = 0;k < 5;k++){
         sid = usr_rx_data_out(rx_buf,sizeof(rx_buf));
         if(sid) //可能没有数据，使用sid判断
             dump_debug_log("Rx",rx_buf,sizeof(rx_buf));
@@ -38,6 +63,7 @@ void demo_test_func(void *arg)
         sid++;
         sid = (sid%4)+1;
     }
+*/
 
 }
 

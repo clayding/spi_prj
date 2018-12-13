@@ -48,7 +48,7 @@ static int spi_tx_data_in(slave_id_t sid, uint8_t *tx_buf, unsigned int size, tx
     ERROR("memory allocated failed\n");
     return 1;
   }
-  
+
   sn_tx_list->spi_tx_frm_node.slave_id = sid;
   data_st_printf("********%s***********\n",__FUNCTION__);
   data_st_printf("%p send_list length before:%d\n",send_list,list_length(send_list));
@@ -138,7 +138,7 @@ int spi_rx_data_in(slave_id_t sid, uint8_t *rx_buf, unsigned int size)
   memcpy(sn_rx_list->spi_rx_frm_node.rx,rx_buf,size);
 
   pthread_mutex_lock(&recv_list_lock);
-  list_push(recv_list, sn_rx_list);
+  list_add(recv_list, sn_rx_list);
   pthread_mutex_unlock(&recv_list_lock);
 
   data_st_printf("%p recv_list length after:%d\n",recv_list,list_length(recv_list));
