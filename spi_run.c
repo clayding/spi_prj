@@ -10,7 +10,7 @@
 #include "data_st.h"
 #include "spi_run.h"
 
-#define   SLAVE_ID_UNUSED 0
+#define   SPI_TXRX_LOOP_TEST
 #define   SPI_SLAVE_INT_HANDLE(x)  (spi_slave##x##_isr_handle) 
 
 static unsigned char slave_isr_cnt[SPI_SLAVE_NUM/5?4:8] = {0};
@@ -65,17 +65,20 @@ static void gpio_ext_int_init(void)
   //TODO
 }
 
-int spi_run(int argc, char **argv)
+int spi_run(void *arg)
 {
   static int8_t recv_from = -1;
   static uint8_t next_recv_sid = 0;
+  uint8_t *spi_initialized = (uint8_t *)arg;
 
   if(exit_signal_register()) return 1;
 
+  gpio_ext_int_init();
+
   if(spi_init() != 0)
     return 1;
-  
-  gpio_ext_int_init();
+
+  *spi_initialized = 1;
 
   while(1){
     slave_id_t sid = 0;
@@ -86,7 +89,7 @@ int spi_run(int argc, char **argv)
     sid = spi_tx_data_out((uint8_t*)tx_buf,sizeof(tx_buf));//sid: 1-4(8)
     //if(sid)
      //dump_debug_log("spi_tx",tx_buf,sizeof(tx_buf));
-#if 0
+#ifndef SPI_TXRX_LOOP_TEST
     if(sid && slave_isr_cnt[sid]){  //need to send and receive
       //TODO pull GPIO(sid) low 
       bcm2835_spi_transfernb(tx_buf, rx_buf, sizeof(tx_buf));
@@ -99,7 +102,7 @@ int spi_run(int argc, char **argv)
       //TODO pull GPIO(sid) low 
       bcm2835_spi_writenb(tx_buf, sizeof(tx_buf));
       //TODO pull GPIO(sid) High
-    }else{                        //just to receive according to the isr index and count
+    }else{                        //just to receive according to the isr event and count
       if(slave_isr_cnt[next_recv_sid]){
         memset(tx_buf,0xff,sizeof(tx_buf));
         //TODO pull GPIO(next_recv_sid) low 
@@ -121,10 +124,11 @@ int spi_run(int argc, char **argv)
         memset(rx_buf,0,sizeof(rx_buf));
       }
     }
-#endif
+#else
     memcpy(rx_buf, tx_buf,sizeof(tx_buf));
     recv_from = sid;
     spi_rx_data_in(recv_from,(uint8_t*)rx_buf,sizeof(rx_buf));
+#endif
     //usleep(1000000);
   }
  

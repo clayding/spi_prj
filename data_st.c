@@ -2,11 +2,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <pthread.h>
 #include "lib/list.h"
 #include "lib/debug.h"
 #include "data_st.h"
 
-#define DATA_ST_DEBUG
+//#define DATA_ST_DEBUG
 #ifdef DATA_ST_DEBUG
 #define data_st_printf(...)  do{printf(__VA_ARGS__);}while(0)
 #else
@@ -19,6 +20,9 @@
             list_t recv_list = (list_t)&LIST_CONCAT(recv_list,_list); \
 
 DECLARE_TXRX_LIST();
+
+static pthread_mutex_t send_list_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t recv_list_lock = PTHREAD_MUTEX_INITIALIZER;
 
 void spi_init_data(void)
 {
@@ -38,6 +42,7 @@ static int spi_tx_data_in(slave_id_t sid, uint8_t *tx_buf, unsigned int size, tx
     ERROR("tx_buf is NULL or tx_buf size exceed %d\n",BUF_SIZE);
     return 1;
   }
+
   sn_tx_list = (spi_tx_node_list*)malloc(sizeof(spi_tx_node_list));
   if(sn_tx_list ==  NULL){
     ERROR("memory allocated failed\n");
@@ -51,11 +56,14 @@ static int spi_tx_data_in(slave_id_t sid, uint8_t *tx_buf, unsigned int size, tx
   //memory allocated successfully
   memcpy(sn_tx_list->spi_tx_frm_node.tx,tx_buf,size);
 
+  pthread_mutex_lock(&send_list_lock);
   if(priority == PRIORIT_HIGH)
     list_push(send_list, sn_tx_list);
   else
     list_add(send_list, sn_tx_list);
+  pthread_mutex_unlock(&send_list_lock);
   data_st_printf("%p send_list length after:%d\n",send_list,list_length(send_list));
+
   return 0;
 }
 
@@ -79,9 +87,14 @@ slave_id_t spi_tx_data_out(uint8_t *tx_buf, unsigned int size )
     WARNING("send list is empty\n");
     return 0;
   }
+
   data_st_printf("********%s***********\n",__FUNCTION__);
   data_st_printf("%p send_list length before:%d\n",send_list,list_length(send_list));
+
+  pthread_mutex_lock(&send_list_lock);
   sn_tx_list = list_pop(send_list);
+  pthread_mutex_unlock(&send_list_lock);
+
   data_st_printf("pop:%p\n",sn_tx_list);
   data_st_printf("%p send_list length after:%d\n",send_list,list_length(send_list));
   if(sn_tx_list ==  NULL){
@@ -111,6 +124,7 @@ int spi_rx_data_in(slave_id_t sid, uint8_t *rx_buf, unsigned int size)
     ERROR("rx_buf is NULL or size exceed %d\n",BUF_SIZE);
     return 1;
   }
+
   sn_rx_list = (spi_rx_node_list*)malloc(sizeof(spi_rx_node_list));
   if(sn_rx_list ==  NULL){
     ERROR("memory allocated failed\n");
@@ -123,7 +137,10 @@ int spi_rx_data_in(slave_id_t sid, uint8_t *rx_buf, unsigned int size)
   //memory allocated successfully
   memcpy(sn_rx_list->spi_rx_frm_node.rx,rx_buf,size);
 
+  pthread_mutex_lock(&recv_list_lock);
   list_push(recv_list, sn_rx_list);
+  pthread_mutex_unlock(&recv_list_lock);
+
   data_st_printf("%p recv_list length after:%d\n",recv_list,list_length(recv_list));
   return 0;
 }
@@ -142,9 +159,13 @@ static slave_id_t spi_rx_data_out(uint8_t *rx_buf, unsigned int size )
     WARNING("recv list is empty\n");
     return 0;
   }
+
   data_st_printf("********%s***********\n",__FUNCTION__);
   data_st_printf("%p recv_list length before:%d\n",recv_list,list_length(recv_list));
+
+  pthread_mutex_lock(&recv_list_lock);
   sn_rx_list = list_pop(recv_list);
+  pthread_mutex_unlock(&recv_list_lock);
   data_st_printf("pop:%p\n",sn_rx_list);
   if(sn_rx_list ==  NULL){
     WARNING("No rx data\n");

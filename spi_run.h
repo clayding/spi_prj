@@ -16,5 +16,5 @@ void spi_slave7_isr_handle(void);
 void spi_slave8_isr_handle(void);
 #endif
 
-int spi_run(int argc, char **argv);
+int spi_run(void *arg);
 #endif

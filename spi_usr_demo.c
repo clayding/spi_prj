@@ -10,20 +10,15 @@
 static uint8_t tx_buf[BUF_SIZE] = {0};
 static uint8_t rx_buf[BUF_SIZE] = {0};
 
+static volatile uint8_t spi_ready = 0;
 
-
-int main(void)
+void demo_test_func(void *arg)
 {
-    uint8_t tx_head = 0;
-    pthread_t spi_run_thread;
+    uint8_t tx_head = 0; //递增
     static slave_id_t sid = 1; //slave id :1-8
+    
+    while(!spi_ready){}; //等待spi初始化完毕
 
-    spi_init_data();
-
-    if (pthread_create(&spi_run_thread, NULL,(void *)spi_run, NULL)) {
-        perror("pthread_create");
-        return 1;
-    }
     for(;;){
         //使用随机数作为测试发送buf的数据
         int i = 0;
@@ -43,4 +38,28 @@ int main(void)
         sid++;
         sid = (sid%4)+1;
     }
+
+}
+
+
+int main(void)
+{
+    pthread_t spi_run_thread,demo_test_thread;
+
+    spi_init_data();//初始化发送和接收链表
+
+    //创建spi 工作线程
+    if (pthread_create(&spi_run_thread, NULL,(void *)spi_run,(uint8_t*)&spi_ready)) {
+        perror("pthread_create");
+        return 1;
+    }
+
+    //创建用户线程，用于向链表中添加发送数据和获取接收的数据
+    if (pthread_create(&demo_test_thread, NULL,(void *)demo_test_func,NULL)) {
+        perror("pthread_create");
+        return 1;
+    }
+
+    pthread_join(spi_run_thread,NULL);
+    pthread_join(demo_test_thread,NULL);
 }
