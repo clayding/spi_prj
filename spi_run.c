@@ -28,7 +28,7 @@ static spi_int_cnt ss_isr_cnt;  //the union of spi slave isr(index: 1 or above) 
 
 static unsigned char ss_isr_sig_registered = 0; //spi slave signal handler 0: not registered 1:registered
 
-#define ISR_SINGNAL_SEND(ptr) do{ \
+#define ISR_SIGNAL_SEND(ptr) do{ \
               sigval_t isr_sigval;  \
               isr_sigval.sival_ptr = ptr; \
               if(ss_isr_sig_registered && sigqueue(getpid(),SIGRTMIN,isr_sigval)==-1) \
@@ -160,7 +160,7 @@ int spi_run(void *arg)
       bcm2835_spi_writenb(tx_buf, sizeof(tx_buf));
       //TODO pull GPIO(sid) High
     }else{                        //just to receive according to the isr event and count
-      if(ss_isr_cnt.slave_isr_cnt_grp[next_recv_sid]){
+      if(spi_auto_read && ss_isr_cnt.slave_isr_cnt_grp[next_recv_sid]){
         memset(tx_buf,0xff,sizeof(tx_buf));
         //TODO pull GPIO(next_recv_sid) low
         bcm2835_spi_transfernb(tx_buf, rx_buf, sizeof(tx_buf));
@@ -219,7 +219,7 @@ int spi_run(void *arg)
 void spi_slave1_isr_handle(void)
 {
   ss_isr_cnt.s_int_cnt.slave_isr1_cnt++;
-  ISR_SINGNAL_SEND(&ss_isr_cnt);
+  ISR_SIGNAL_SEND(&ss_isr_cnt);
   fflush (stdout) ;
 }
 
