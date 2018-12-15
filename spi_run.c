@@ -59,7 +59,7 @@ static int spi_signal_register(spi_sighandler user_handler)
     }
     ss_isr_sig_registered = 1;
   }else{
-    printf("signal user_handler register failed\n");
+    WARNING("signal user_handler register failed\n");
   }
 
   return 0;

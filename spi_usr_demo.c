@@ -13,8 +13,8 @@ static uint8_t tx_buf[BUF_SIZE] = {0};
 static uint8_t rx_buf[BUF_SIZE] = {0};
 
 static uint8_t spi_ready = 0;
-static volatile int txrx_times = 0;
-static int total_times = 0;
+static volatile unsigned txrx_times = 0;
+static unsigned int total_times = 0;
 
 //主要的测试程序,如果只是测试链表等的功能可以把spi_run.c的宏SPI_TXRX_LOOP_TEST取消注释
 void demo_test_func(void *arg)

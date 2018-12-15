@@ -14,14 +14,14 @@ typedef struct spi_ext_event_st{
 
 
 typedef union spi_int_cnt_un{
-    int slave_isr_cnt_grp[SPI_SLAVE_NUM+1];
+    unsigned int slave_isr_cnt_grp[SPI_SLAVE_NUM+1];
     struct slave_int_cnt_st{
-        int slave_isr_num;
-        int slave_isr1_cnt;
+        unsigned int slave_isr_num;
+        unsigned int slave_isr1_cnt;
 #if defined SPI_MULTI_SLAVE_INT
-        int slave_isr2_cnt;
-        int slave_isr3_cnt;
-        int slave_isr4_cnt;
+        unsigned int slave_isr2_cnt;
+        unsigned int slave_isr3_cnt;
+        unsigned int slave_isr4_cnt;
 #endif //SPI_MULTI_SLAVE_INT
     }s_int_cnt;
 }spi_int_cnt;
