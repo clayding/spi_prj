@@ -18,7 +18,7 @@ typedef struct spi_tx_data_frm_st{
 }spi_tx_data_frm;
 
 typedef struct spi_rx_data_frm_st{
-    slave_id_t slave_id; //from 0 to 7
+    slave_id_t slave_id; //from 1 to 8, 0: invalid id
     uint8_t rx[BUF_SIZE]; //packet received
 }spi_rx_data_frm;
 

@@ -145,7 +145,7 @@ int spi_run(void *arg)
 #ifndef SPI_TXRX_LOOP_TEST
   #ifdef SPI_MULTI_SLAVE_INT
     /**********************************************************************************************
-     ***************************Multi Intterrupt Lines(1-8) Prorssing *****************************
+     ***************************Multi Interrupt Lines(1-8) Processing *****************************
      **********************************************************************************************/
     if(sid && ss_isr_cnt.slave_isr_cnt_grp[sid]){  //need to send and receive
       //TODO pull GPIO(sid) low 
@@ -172,7 +172,7 @@ int spi_run(void *arg)
     }
   #else
     /**********************************************************************************************
-     *************************Single Intterrupt Line(Only 1) Prorssing ****************************
+     *************************Single Interrupt Line(Only 1) Processing ****************************
      **********************************************************************************************/
     if(sid && ss_isr_cnt.slave_isr_cnt_grp[SPI_SINGLE_SLAVE_INT_LINE]){  //need to send and receive
       bcm2835_spi_transfernb(tx_buf, rx_buf, sizeof(tx_buf));
